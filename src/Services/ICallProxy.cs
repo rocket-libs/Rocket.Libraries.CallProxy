@@ -6,6 +6,6 @@ namespace Rocket.Libraries.CallProxying.Services
 {
     public interface ICallProxy : IDisposable
     {
-        Task<WrappedResponse<TResponse>> CallAsync<TResponse>(Func<Task<TResponse>> runner);
+        Task<WrappedResponse<TSuccess>> CallAsync<TSuccess>(Func<Task<TSuccess>> runner);
     }
 }

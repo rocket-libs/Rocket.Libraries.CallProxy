@@ -1,14 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>1.0.0-beta20</Version>
+    <Version>1.0.0-beta22</Version>
     <CodeAnalysisRuleSet>../rocket.rules-v01.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.2.0" />
-    <PackageReference Include="Rocket.Libraries.Validation" Version="2.0.0-beta05" />
   </ItemGroup>
 
     <ItemGroup>
