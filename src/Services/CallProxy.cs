@@ -1,11 +1,9 @@
 ﻿namespace Rocket.Libraries.CallProxying.Services
 {
-    using System;
-    using System.Threading.Tasks;
     using Rocket.Libraries.CallProxying.Models;
-    using Rocket.Libraries.Validation.Exceptions;
-    using Rocket.Libraries.Validation.Models;
-    using src.Services;
+    using System;
+    using System.Collections.Immutable;
+    using System.Threading.Tasks;
 
     public class CallProxy : ICallProxy
     {
@@ -16,7 +14,7 @@
             this.proxyActions = proxyActions;
         }
 
-        public async Task<WrappedResponse<TResponse>> CallAsync<TResponse>(Func<Task<TResponse>> runner)
+        public async Task<WrappedResponse<TSuccess>> CallAsync<TSuccess>(Func<Task<TSuccess>> runner)
         {
             try
             {
@@ -24,45 +22,34 @@
                 {
                     throw new ObjectDisposedException(GetType().Name);
                 }
+
                 await proxyActions.OnBeforeCallAsync();
                 var response = await runner();
                 await proxyActions.OnSuccessAsync();
-                return GetSuccessResponse(response);
+                return GetSuccessResponse<TSuccess>(response);
             }
             catch (Exception e)
             {
-                await proxyActions.OnFailureAsync(e);
-                return GetErrorResponse<TResponse>(e);
+                var errors = await proxyActions.OnFailureAsync(e);
+                return GetErrorResponse<TSuccess>(e, errors);
             }
             finally
             {
-                CleanUp();
+                await CleanUpAsync();
                 runner = null;
             }
         }
 
-        private void CleanUp()
+        private async Task CleanUpAsync()
         {
-            this.proxyActions?.OnTerminatingAsync();
+            await proxyActions?.OnTerminatingAsync();
+            proxyActions?.Dispose();
             this.proxyActions = null;
         }
 
-        private static ImmutableList<Error> GetErrorsIfAny(Exception e)
+        private WrappedResponse<TSuccess> GetSuccessResponse<TSuccess>(TSuccess response)
         {
-            var failedValidationException = e as FailedValidationException;
-            if (failedValidationException != null)
-            {
-                return failedValidationException.Errors;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        private WrappedResponse<TResponse> GetSuccessResponse<TResponse>(TResponse response)
-        {
-            return new WrappedResponse<TResponse>
+            return new WrappedResponse<TSuccess>
             {
                 Code = 1,
                 Message = "Success",
@@ -70,13 +57,13 @@
             };
         }
 
-        private WrappedResponse<TResponse> GetErrorResponse<TResponse>(Exception e)
+        private WrappedResponse<TSuccess> GetErrorResponse<TSuccess>(Exception e, ImmutableList<object> errors)
         {
-            return new WrappedResponse<TResponse>
+            return new WrappedResponse<TSuccess>
             {
                 Code = 2,
                 Message = "Error Occured On Server.",
-                Errors = GetErrorsIfAny(e),
+                Errors = errors,
             };
         }
 
@@ -90,7 +77,6 @@
             {
                 if (disposing)
                 {
-                    CleanUp();
                 }
 
                 // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
