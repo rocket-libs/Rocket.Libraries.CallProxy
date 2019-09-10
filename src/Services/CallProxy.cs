@@ -1,7 +1,6 @@
 ﻿namespace Rocket.Libraries.CallProxying.Services
 {
     using System;
-    using System.Collections.Immutable;
     using System.Threading.Tasks;
     using Rocket.Libraries.CallProxying.Models;
     using Rocket.Libraries.Validation.Exceptions;
@@ -11,12 +10,11 @@
     public class CallProxy : ICallProxy
     {
         private IProxyActions proxyActions;
+
         public CallProxy(IProxyActions proxyActions)
         {
             this.proxyActions = proxyActions;
-
         }
-        
 
         public async Task<WrappedResponse<TResponse>> CallAsync<TResponse>(Func<Task<TResponse>> runner)
         {
@@ -33,7 +31,7 @@
             }
             catch (Exception e)
             {
-                await proxyActions.OnFailureAsync(e); 
+                await proxyActions.OnFailureAsync(e);
                 return GetErrorResponse<TResponse>(e);
             }
             finally
@@ -85,8 +83,6 @@
         #region IDisposable Support
 
         private bool disposedValue = false; // To detect redundant calls
-
-       
 
         protected virtual void Dispose(bool disposing)
         {
