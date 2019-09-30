@@ -19,7 +19,12 @@
             this.httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<WrappedResponse<TSuccess>> CallAsync<TSuccess>(Func<Task<TSuccess>> runner)
+        public void RepondThatRequestWasBad<TResponse>(TResponse payload)
+        {
+            throw new BadRequestException<TResponse>(payload);
+        }
+
+        public async Task<WrappedResponse<TResponse>> CallAsync<TResponse>(Func<Task<TResponse>> runner)
         {
             try
             {
@@ -31,12 +36,12 @@
                 await proxyActions.OnBeforeCallAsync();
                 var response = await runner();
                 await proxyActions.OnSuccessAsync();
-                return GetSuccessResponse<TSuccess>(response);
+                return GeTResponseResponse<TResponse>(response);
             }
             catch (Exception e)
             {
                 var errors = await proxyActions.OnFailureAsync(e);
-                return GetErrorResponse<TSuccess>(e, errors);
+                return GetErrorResponse<TResponse>(e, errors);
             }
             finally
             {
@@ -52,9 +57,9 @@
             this.proxyActions = null;
         }
 
-        private WrappedResponse<TSuccess> GetSuccessResponse<TSuccess>(TSuccess response)
+        private WrappedResponse<TResponse> GeTResponseResponse<TResponse>(TResponse response)
         {
-            return new WrappedResponse<TSuccess>
+            return new WrappedResponse<TResponse>
             {
                 Code = 1,
                 Message = "Success",
@@ -62,14 +67,14 @@
             };
         }
 
-        private WrappedResponse<TSuccess> GetErrorResponse<TSuccess>(Exception e, ImmutableList<object> errors)
+        private WrappedResponse<TResponse> GetErrorResponse<TResponse>(Exception e, ImmutableList<object> errors)
         {
-            var badRequestException = e as BadRequestException<TSuccess>;
+            var badRequestException = e as BadRequestException<TResponse>;
             if (badRequestException != null)
             {
                 httpContextAccessor.HttpContext.Response.StatusCode = 400;
             }
-            return new WrappedResponse<TSuccess>
+            return new WrappedResponse<TResponse>
             {
                 Code = 2,
                 Message = "Error Occured On Server.",
