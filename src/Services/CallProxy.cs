@@ -1,17 +1,22 @@
 ﻿namespace Rocket.Libraries.CallProxying.Services
 {
-    using Rocket.Libraries.CallProxying.Models;
     using System;
     using System.Collections.Immutable;
     using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Http;
+    using Rocket.Libraries.CallProxy.Models;
+    using Rocket.Libraries.CallProxying.Models;
 
     public class CallProxy : ICallProxy
     {
+        private readonly IHttpContextAccessor httpContextAccessor;
+
         private IProxyActions proxyActions;
 
-        public CallProxy(IProxyActions proxyActions)
+        public CallProxy(IProxyActions proxyActions, IHttpContextAccessor httpContextAccessor)
         {
             this.proxyActions = proxyActions;
+            this.httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<WrappedResponse<TSuccess>> CallAsync<TSuccess>(Func<Task<TSuccess>> runner)
@@ -59,11 +64,17 @@
 
         private WrappedResponse<TSuccess> GetErrorResponse<TSuccess>(Exception e, ImmutableList<object> errors)
         {
+            var badRequestException = e as BadRequestException<TSuccess>;
+            if (badRequestException != null)
+            {
+                httpContextAccessor.HttpContext.Response.StatusCode = 400;
+            }
             return new WrappedResponse<TSuccess>
             {
                 Code = 2,
                 Message = "Error Occured On Server.",
                 Errors = errors,
+                Payload = badRequestException != null ? badRequestException.Payload : default,
             };
         }
 
