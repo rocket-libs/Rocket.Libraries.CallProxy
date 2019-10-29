@@ -74,6 +74,7 @@
             {
                 httpContextAccessor.HttpContext.Response.StatusCode = 400;
             }
+
             return new WrappedResponse<TResponse>
             {
                 Code = 2,
