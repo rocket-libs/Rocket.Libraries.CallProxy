@@ -5,6 +5,10 @@
     <Version>1.1.0</Version>
     <CodeAnalysisRuleSet>../rocket.rules-v01.ruleset</CodeAnalysisRuleSet>
     <LangVersion>latest</LangVersion>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/rocket-libs/Rocket.Libraries.CallProxy</PackageProjectUrl>
+    <Description>https://github.com/rocket-libs/Rocket.Libraries.CallProxy</Description>
+    <RepositoryUrl>https://github.com/rocket-libs/Rocket.Libraries.CallProxy.git</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
