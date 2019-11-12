@@ -2,3 +2,9 @@ src/bin/**
 src/obj/**
 
 src/.vs/Rocket.Libraries.CallProxy/v15/
+
+.vs/Rocket.Libraries.CallProxy/DesignTimeBuild/
+
+.vs/Rocket.Libraries.CallProxy/v15/
+
+.vs/Rocket.Libraries.CallProxy/v16/

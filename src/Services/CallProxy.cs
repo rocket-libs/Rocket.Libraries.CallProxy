@@ -1,19 +1,27 @@
 ﻿namespace Rocket.Libraries.CallProxying.Services
 {
     using System;
+    using System.Collections.Immutable;
     using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Http;
+    using Rocket.Libraries.CallProxy.Models;
     using Rocket.Libraries.CallProxying.Models;
-    using Rocket.Libraries.Validation.Exceptions;
-    using Rocket.Libraries.Validation.Models;
-    using src.Services;
 
     public class CallProxy : ICallProxy
     {
+        private readonly IHttpContextAccessor httpContextAccessor;
+
         private IProxyActions proxyActions;
 
-        public CallProxy(IProxyActions proxyActions)
+        public CallProxy(IProxyActions proxyActions, IHttpContextAccessor httpContextAccessor)
         {
             this.proxyActions = proxyActions;
+            this.httpContextAccessor = httpContextAccessor;
+        }
+
+        public void RepondThatRequestWasBad<TResponse>(TResponse payload)
+        {
+            throw new BadRequestException<TResponse>(payload);
         }
 
         public async Task<WrappedResponse<TResponse>> CallAsync<TResponse>(Func<Task<TResponse>> runner)
@@ -24,43 +32,32 @@
                 {
                     throw new ObjectDisposedException(GetType().Name);
                 }
+
                 await proxyActions.OnBeforeCallAsync();
                 var response = await runner();
                 await proxyActions.OnSuccessAsync();
-                return GetSuccessResponse(response);
+                return GeTResponseResponse<TResponse>(response);
             }
             catch (Exception e)
             {
-                await proxyActions.OnFailureAsync(e);
-                return GetErrorResponse<TResponse>(e);
+                var errors = await proxyActions.OnFailureAsync(e);
+                return GetErrorResponse<TResponse>(e, errors);
             }
             finally
             {
-                CleanUp();
+                await CleanUpAsync();
                 runner = null;
             }
         }
 
-        private void CleanUp()
+        private async Task CleanUpAsync()
         {
-            this.proxyActions?.OnTerminatingAsync();
+            await proxyActions?.OnTerminatingAsync();
+            proxyActions?.Dispose();
             this.proxyActions = null;
         }
 
-        private static ImmutableList<Error> GetErrorsIfAny(Exception e)
-        {
-            var failedValidationException = e as FailedValidationException;
-            if (failedValidationException != null)
-            {
-                return failedValidationException.Errors;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        private WrappedResponse<TResponse> GetSuccessResponse<TResponse>(TResponse response)
+        private WrappedResponse<TResponse> GeTResponseResponse<TResponse>(TResponse response)
         {
             return new WrappedResponse<TResponse>
             {
@@ -70,13 +67,20 @@
             };
         }
 
-        private WrappedResponse<TResponse> GetErrorResponse<TResponse>(Exception e)
+        private WrappedResponse<TResponse> GetErrorResponse<TResponse>(Exception e, ImmutableList<object> errors)
         {
+            var badRequestException = e as BadRequestException<TResponse>;
+            if (badRequestException != null)
+            {
+                httpContextAccessor.HttpContext.Response.StatusCode = 400;
+            }
+
             return new WrappedResponse<TResponse>
             {
                 Code = 2,
                 Message = "Error Occured On Server.",
-                Errors = GetErrorsIfAny(e),
+                Errors = errors,
+                Payload = badRequestException != null ? badRequestException.Payload : default,
             };
         }
 
@@ -90,7 +94,6 @@
             {
                 if (disposing)
                 {
-                    CleanUp();
                 }
 
                 // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

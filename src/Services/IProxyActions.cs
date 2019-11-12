@@ -1,18 +1,17 @@
 using System;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 
-namespace src.Services
+namespace Rocket.Libraries.CallProxying.Services
 {
-    public interface IProxyActions
+    public interface IProxyActions : IDisposable
     {
-         Task OnBeforeCallAsync();
+        Task OnBeforeCallAsync();
 
-         Task OnSuccessAsync();
+        Task OnSuccessAsync();
 
-         Task OnFailureAsync(Exception exception = null);
+        Task<ImmutableList<object>> OnFailureAsync(Exception exception = null);
 
-         Task OnTerminatingAsync();
-
-         
+        Task OnTerminatingAsync();
     }
 }

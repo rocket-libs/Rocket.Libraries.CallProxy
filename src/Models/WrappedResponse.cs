@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Collections.Immutable;
-using Rocket.Libraries.Validation.Models;
+﻿using System.Collections.Immutable;
 
 namespace Rocket.Libraries.CallProxying.Models
 {
@@ -12,6 +10,6 @@ namespace Rocket.Libraries.CallProxying.Models
 
         public TResponse Payload { get; set; }
 
-        public ImmutableList<Error> Errors { get; set; }
+        public ImmutableList<object> Errors { get; set; }
     }
 }
