@@ -8,7 +8,7 @@ namespace Rocket.Libraries.CallProxying.Services
     {
         Task OnBeforeCallAsync();
 
-        Task OnSuccessAsync();
+        Task OnSuccessAsync(object responsePayload);
 
         Task<ImmutableList<object>> OnFailureAsync(Exception exception = null);
 

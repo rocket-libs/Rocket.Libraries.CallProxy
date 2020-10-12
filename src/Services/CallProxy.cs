@@ -34,9 +34,9 @@
                 }
 
                 await proxyActions.OnBeforeCallAsync();
-                var response = await runner();
-                await proxyActions.OnSuccessAsync();
-                return GeTResponseResponse<TResponse>(response);
+                var responsePayload = await runner();
+                await proxyActions.OnSuccessAsync(responsePayload);
+                return GeTResponseResponse<TResponse>(responsePayload);
             }
             catch (Exception e)
             {
