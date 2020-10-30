@@ -10,7 +10,7 @@ namespace Rocket.Libraries.CallProxying.Services
 
         Task OnSuccessAsync(object responsePayload);
 
-        Task<ImmutableList<object>> OnFailureAsync(Exception exception = null);
+        Task<ImmutableList<object>> OnFailureAsync(Exception exception = null, int httpStatusCode = 400);
 
         Task OnTerminatingAsync();
     }
